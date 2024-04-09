@@ -35,21 +35,21 @@ class WsmailApplicationTests {
 
     @Test
     void JSONToDto() throws IOException {
-        String json = "{\"to\": [\"tcn@abes.fr\", \"chambon@abes.fr\"], \"cc\": [\"chambon@abes.fr\", \"tcn@abes.fr\"], \"cci\": [\"chambon@abes.fr\"], \"subject\": \"Test\", \"text\": \"Test.\"}";
+        String json = "{\"to\": [\"test@abes.fr\", \"test2@abes.fr\"], \"cc\": [\"test3@abes.fr\", \"test3@abes.fr\"], \"cci\": [\"test5@abes.fr\"], \"subject\": \"Test\", \"text\": \"Test.\"}";
         MailDto mail = new ObjectMapper().readValue(json, MailDto.class);
-        assertThat(mail.getTo()).isEqualTo(new String[]{"tcn@abes.fr", "chambon@abes.fr"});
-        assertThat(mail.getCci()).isEqualTo(new String[]{"chambon@abes.fr"});
-        assertThat(mail.getCc()).isEqualTo(new String[]{"chambon@abes.fr", "tcn@abes.fr"});
+        assertThat(mail.getTo()).isEqualTo(new String[]{"test@abes.fr", "test2@abes.fr"});
+        assertThat(mail.getCci()).isEqualTo(new String[]{"test5@abes.fr"});
+        assertThat(mail.getCc()).isEqualTo(new String[]{"test3@abes.fr", "test3@abes.fr"});
         assertThat(mail.getSubject()).isEqualTo("Test");
         assertThat(mail.getText()).isEqualTo("Test.");
     }
 
     @Test
     void getConf() {
-        assertThat(env.getProperty("exemple.mail.host")).isEqualTo("lotus.transition-bibliographique.fr");
-        assertThat(env.getProperty("exemple.mail.password")).isEqualTo("43MSokwRJ4");
-        assertThat(env.getProperty("exemple.mail.username")).isEqualTo("wsmail@wsmail.abes.fr");
-        assertThat(env.getProperty("exemple.mail.sender")).isEqualTo("noreply@wsmail.abes.fr");
+        assertThat(env.getProperty("exemple.mail.host")).isEqualTo("serveurmail.fr");
+        assertThat(env.getProperty("exemple.mail.password")).isEqualTo("motDePasse");
+        assertThat(env.getProperty("exemple.mail.username")).isEqualTo("exemple@abes.fr");
+        assertThat(env.getProperty("exemple.mail.sender")).isEqualTo("exemple@abes.fr");
     }
 
     @Test
