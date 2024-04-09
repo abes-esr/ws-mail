@@ -2,20 +2,16 @@
 
 Ce WS vous permet, via un simple appel REST, d'envoyer des mails via les serveurs de l'ABES
 
-Pour pouvoir l'utiliser avec vos application, il est nécessaire de mettre à jour la configuration du WS
-
-Contactez TCN ou bien mettez à jour le "application.properties" de ce projet en suivant l'exemple (c'est facile).
-
-Pour les appels en Java, l'utilisation de dépendances peut permettre de simplifier les appels. FluentAPI par exemple rend l'écriture de ces appels POST plus court et simple.
+Pour pouvoir l'utiliser avec vos application, il est recommandé de mettre à jour la configuration du WS pour ajouter un compte spécifique à votre application. Voir [Mettre à jour la configuration](#mise-à-jour-de-la-configuration-pour-ajouter-une-application-appelante)
+Sinon, les identifiants par défaut seront utilisés.
 
 ## Exemples d'appels au WS
 
 #### Attention : tous les paramètres (même s'ils doivent être vides) sont obligatoires dans le JSON
 
-A noter : Tous les exemples JAVA utilisent le JSON "brut", généré directement sous forme de String.
-Il peut être intéressant, pour faire du code plus élégant et pour faciliter la réutilisation, de mettre en place en Java un objet MailDTO (avec les membres App, To, Cc, etc.), qui sera ensuite converti en JSON lors de l'envoi au WS. Cela permet de travailler avec des objets plutôt que de manipuler des String potentiellement longues, et s'avère donc plus simple.
+A noter : En JAVA, vous pouvez créer un objet (classe ou record) MailDto, qui sera ensuite transformé en JSON lors de l'appel au WS, ou bien dans les cas simple vous pouvez écrire directement le JSON dans une String (mais cela peut s'avérer moins lisible et plus difficile à maintenir). Voir les exemples avec et sans MailDto, ci dessous.
 
-Des exemples sont disponibles dans les applications utilisant ce WS (Item, Licences Nationales, Cidemis, ...)
+Des exemples sont disponibles dans les applications utilisant ce WS (Item, Licences Nationales, Cidemis; Convergence, ...)
 
 ### /simpleMail
 * JS : 
@@ -32,7 +28,7 @@ JSON à utiliser en body d'une requête HTTP POST :
 }
 ```
 
-* JAVA : 
+* JAVA (sans objet MailDto) : 
 ```
         URL url = new URL("http://localhost:8080/htmlMail");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -57,24 +53,51 @@ JSON à utiliser en body d'une requête HTTP POST :
             //Gestion de l'erreur
         }
 ```
-* JAVA avec Spring :
+* JAVA avec Spring (et objet MailDto) :
+
+```        
+	@Getter
+	@Setter
+	public class MailDto {
+	    private String app;
+	    private String[] to;
+	    private String[] cc;
+	    private String[] cci;
+	    private String subject;
+	    private String text;
+	}
 ```
-        RestTemplate restTemplate = new RestTemplate();
+  
+```
+       
+
+	//Creation du JSON à partir de l'objet MailDto
+        String json = "";
+        ObjectMapper mapper = new ObjectMapper();
+        MailDto mail = new MailDto();
+        mail.setApp("monApp");
+        mail.setTo(["test@mail.com"]);
+        mail.setCc(new String[]{});
+        mail.setCci(new String[]{});
+        mail.setSubject("sujet");
+        mail.setText("contenu");
+        try {
+            json = mapper.writeValueAsString(mail);
+        } catch (JsonProcessingException e) {
+            log.error("Erreur lors du la création du mail. " + e);
+        }
+
+	RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/simpleMail";
-        String requestJson = "{\n" +
-                "\t\"to\": [\"tcn@abes.fr\", \"chambon@abes.fr\"],\n" +
-                "\t\"cc\": [\"chambon@abes.fr\", \"tcn@abes.fr\"],\n" +
-                "\t\t\"cci\": [\"chambon@abes.fr\"],\n" +
-                "\t\"subject\": \"Test\",\n" +
-                "\t\"text\": \"Ceci est un test.\"\n" +
-                "}";
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
-        HttpEntity<String> entity = new HttpEntity<String>(requestJson,headers);
+        HttpEntity<String> entity = new HttpEntity<String>(json,headers);
         String answer = restTemplate.postForObject(url, entity, String.class);
+	// Gérer ensuite éventuellement les retours (200 ou erreur) etc.
 ```
 
 Exemple avec cURL :
@@ -99,7 +122,7 @@ JSON à utiliser en body :
 }
 ```
 
-* JAVA : 
+* JAVA sans objet MailDto : 
 ```
         URL url = new URL("http://localhost:8080/htmlMail");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -125,39 +148,71 @@ JSON à utiliser en body :
         }
 ```
 * JAVA avec Spring :
+```        
+	@Getter
+	@Setter
+	public class MailDto {
+	    private String app;
+	    private String[] to;
+	    private String[] cc;
+	    private String[] cci;
+	    private String subject;
+	    private String text;
+	}
 ```
+
+```
+	String json = "";
+        ObjectMapper mapper = new ObjectMapper();
+        MailDto mail = new MailDto();
+        mail.setApp("monApp");
+        mail.setTo(["test@mail.com"]);
+        mail.setCc(new String[]{});
+        mail.setCci(new String[]{});
+        mail.setSubject("sujet");
+        mail.setText("contenu");
+        try {
+            json = mapper.writeValueAsString(mail);
+        } catch (JsonProcessingException e) {
+            log.error("Erreur lors du la création du mail. " + e);
+        }
+
         RestTemplate restTemplate = new RestTemplate();
         String url = "http://localhost:8080/htmlMail";
-        String requestJson = "{\n" +
-                "\t\"to\": [\"tcn@abes.fr\", \"chambon@abes.fr\"],\n" +
-                "\t\"cc\": [\"chambon@abes.fr\", \"tcn@abes.fr\"],\n" +
-                "\t\t\"cci\": [\"chambon@abes.fr\"],\n" +
-                "\t\"subject\": \"Test\",\n" +
-                "\t\"text\": \"<b>Ceci est un test</b>.\"\n" +
-                "}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
-        HttpEntity<String> entity = new HttpEntity<String>(requestJson,headers);
+        HttpEntity<String> entity = new HttpEntity<String>(json,headers);
         String answer = restTemplate.postForObject(url, entity, String.class);
 ```
 
 ### /htmlMailAttachment
 
-* JAVA : 
+* JAVA avec MailDto : 
 ```
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost uploadFile = new HttpPost("http://localhost:8080/htmlMailAttachment");
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addTextBody("mail", "{\n" +
-                "\t\"to\": [\"tcn@abes.fr\", \"chambon@abes.fr\"],\n" +
-                "\t\"cc\": [\"chambon@abes.fr\"],\n" +
-                "\t\t\"cci\": [\"chambon@abes.fr\"],\n" +
-                "\t\"subject\": \"Objet du mail\",\n" +
-                "\t\"text\": \"Exemple de contenu, avec <b>HTML</b>.\"\n" +
-                "}", ContentType.TEXT_PLAIN);
+
+	//Creation du JSON à partir de l'objet MailDto
+        String json = "";
+        ObjectMapper mapper = new ObjectMapper();
+        MailDto mail = new MailDto();
+        mail.setApp("monApp");
+        mail.setTo(["test@mail.com"]);
+        mail.setCc(new String[]{});
+        mail.setCci(new String[]{});
+        mail.setSubject("sujet");
+        mail.setText("contenu");
+        try {
+            json = mapper.writeValueAsString(mail);
+        } catch (JsonProcessingException e) {
+            log.error("Erreur lors du la création du mail. " + e);
+        }
+
+        builder.addTextBody("mail", json, ContentType.TEXT_PLAIN);
 
         // This attaches the file to the POST:
         File f = new File("test.txt");
@@ -172,7 +227,55 @@ JSON à utiliser en body :
         uploadFile.setEntity(multipart);
         CloseableHttpResponse response = httpClient.execute(uploadFile);
         HttpEntity responseEntity = response.getEntity();
+	// Gérer ensuite les différents retours possible (code erreur, etc)
 ```
+
+* JAVA avec Spring et MailDto :
+  
+ ```        
+	@Getter
+	@Setter
+	public class MailDto {
+	    private String app;
+	    private String[] to;
+	    private String[] cc;
+	    private String[] cci;
+	    private String subject;
+	    private String text;
+	}
+```
+```
+	//Creation du JSON à partir de l'objet MailDto
+        String json = "";
+        ObjectMapper mapper = new ObjectMapper();
+        MailDto mail = new MailDto();
+        mail.setApp("monApp");
+        mail.setTo(["test@mail.com"]);
+        mail.setCc(new String[]{});
+        mail.setCci(new String[]{});
+        mail.setSubject("sujet");
+        mail.setText("contenu");
+        try {
+            json = mapper.writeValueAsString(mail);
+        } catch (JsonProcessingException e) {
+            log.error("Erreur lors du la création du mail. " + e);
+        }
+
+	//Creation de l'objet MultiPart
+	MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+	//Ecrire une méthode getAttachmentFile() qui doit retourner un objet FileSystemResource
+	body.add("attachment", getAttachmentFile());
+	body.add("mail", json);
+
+        builder.addTextBody("mail", json, ContentType.TEXT_PLAIN);
+
+        String serverUrl = "http://localhost:8080/htmlMail";
+
+	RestTemplate restTemplate = new RestTemplate();
+	ResponseEntity<String> response = restTemplate.postForEntity(serverUrl, requestEntity, String.class);
+	// Gérer ensuite les différents retours possible (code erreur, etc)
+```
+
 ### /v2/htmlMailAttachment
 
 Même fonctionnement que la v1 au dessus, mais supporte les pièces jointes multiples (max : 10Mo)
@@ -185,32 +288,34 @@ Ces URLs sont utilisées par une sonde uptimerobot pour surveiller que le servic
 
 La route test-eole permet de continuer à surveiller le serveur de mail eole le temps que la migration de tous les envoi de mail sur lotus soit effectuée, et devrait être supprimée par la suite.
 
+## Code retours et documentation OpenAPI
 
-## Mémo pour compiler et exécuter l'application en local
+Une documentation OpenAPI (swagger) est disponible à l'url suivante : https://apicom.sudoc.fr/wsmail/swagger-ui/index.html
 
-Pour compiler le war avec maven :
-```
-mvn package
-```
+Les retours possible de l'API sont : 
 
-Pour lancer les tests avec maven :
-```
-mvn test
-```
+* 200 : Mail envoyé
+* 400 / 40X : Mauvaise requête. L'erreur sera précisée dans le corps du retour de l'API (paramètre manquant, adresse mail incorrecte, PJ trop volumineuse, etc)
+* 503 / 50X : Service indisponible. L'API est indisponible, consultez les logs si vous y avez accès, ou bien rapprochez vous du responsable de l'application.
 
-Pour lancer un serveur tomcat vierge via docker (CTRL+C pour le stopper) :
+## Mise à jour de la configuration pour ajouter une application appelante
+
+Si vous souhaitez envoyer des mails avec un compte propre à votre application, et personnaliser l'adresse d'expédition, il faut ajouter votre application dans la configuration du WS.
+Cela se fait en ajoutant dans les fichier .env (sur diplotaxis2, dev test prod) les informations suivantes : 
 ```
-docker run \
-    --rm \
-    -e TZ="Europe/Paris" \
-    -p 8080:8080 \
-    --name my-docker-tomcat \
-    tomcat:9-jdk11
+monApp.mail.host=serveurmail.fr
+monApp.mail.username=exemple@abes.fr
+monApp.mail.password=motDePasse
+monApp.mail.sender=exemple@abes.fr
 ```
 
-Ensuite dans un autre terminal copier le WAR pour qu'il se déploie dans le tomcat (répéter l'opération après chaque `mvn package` et attendez quelques secondes pour que tomcat prenne en compte le nouveau WAR) :
+Ensuite, il faut mettre à jour le fichier docker-compose.yml (disponible ici : https://github.com/abes-esr/ws-mail-docker ) pour y ajouter ces paramètres : 
 ```
-docker cp target/wsmail-1.0.0-SNAPSHOT.war my-docker-tomcat:/usr/local/tomcat/webapps/ROOT.war
+#MONAPP
+MONAPP_MAIL_HOST: ${WSMAIL_MONAPP_MAIL_HOST}
+MONAPP_MAIL_USERNAME: ${WSMAIL_MONAPP_MAIL_USERNAME}
+MONAPP_MAIL_PASSWORD: ${WSMAIL_MONAPP_MAIL_PASSWORD}
+MONAPP_MAIL_SENDER: ${WSMAIL_MONAPP_MAIL_SENDER}
 ```
 
-Ensuite on peut appeler par exemple la route /test-default, en se rendant sur http://localhost:8080/test-default
+Vous pourrez ensuite simplement, dans le JSON à envoyer au WS, utiliser le nom de votre app (monApp dans l'exemple) dans le champ "app" afin d'utiliser ces paramètres personnalisés.
