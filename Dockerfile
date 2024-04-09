@@ -30,7 +30,7 @@ RUN mvn --batch-mode -e \
 #FROM tomcat:9-jdk11 as api-image
 #COPY --from=build-image /build/web/target/*.war /usr/local/tomcat/webapps/ROOT.war
 #CMD [ "catalina.sh", "run" ]
-FROM eclipse-temurin:21-jre as api-recherche-image
+FROM eclipse-temurin:21-jre as ws-mail-image
 WORKDIR /app/
 COPY --from=build-image /build/target/*.jar /app/ws-mail.jar
-ENTRYPOINT ["java","-jar","/app/theses-api-recherche.jar"]
+ENTRYPOINT ["java","-jar","/app/ws-mail.jar"]
