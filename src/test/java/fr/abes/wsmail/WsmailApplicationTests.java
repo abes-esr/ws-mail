@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 
-import javax.mail.internet.AddressException;
+import jakarta.mail.internet.AddressException;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +53,7 @@ class WsmailApplicationTests {
     }
 
     @Test
-    void checkMailWrong() throws AddressException {
+    void checkMailWrong() {
         AddressException thrown = Assertions.assertThrows(AddressException.class, () -> {
             emailService.checkMail(new String[]{"test"});
         });

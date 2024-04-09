@@ -3,10 +3,10 @@ package fr.abes.wsmail.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.wsmail.mail.EmailService;
 import fr.abes.wsmail.model.MailDto;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +18,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
-import javax.validation.constraints.NotNull;
-import javax.websocket.server.PathParam;
+import jakarta.mail.internet.AddressException;
+import jakarta.validation.constraints.NotNull;
+import jakarta.websocket.server.PathParam;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -47,13 +46,13 @@ public class MailController {
     }
 
 
-    @ApiOperation(value = "Envoi d'un mail basique (texte simple, sans HTML).")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Mail envoyé."),
-            @ApiResponse(code = 503, message = "Service indisponible."),
-            @ApiResponse(code = 400, message = "Mauvaise requête. Le paramètre problématique sera précisé par le message d'erreur. Par exemple : paramètre manquant, adresse erronnée...")})
+    @Operation(summary  = "Envoi d'un mail basique (texte simple, sans HTML).")
+    @ApiResponse(responseCode  = "200", description  = "Mail envoyé.")
+    @ApiResponse(responseCode  = "503", description  = "Service indisponible.")
+    @ApiResponse(responseCode  = "400", description  = "Mauvaise requête. Le paramètre problématique sera précisé par le message d'erreur. Par exemple : paramètre manquant, adresse erronnée...")
     @PostMapping(value = "/simpleMail")
     @ResponseBody
-    public String createSimpleMail(@ApiParam(value = "Objet JSON contenant les informations sur le mail a envoyer. Tous les champs sont nécessaires mais peuvent être null/vide. Les to/cc/cci sont des tableaux de String. App correspond au nom de votre application et doit correspondre à la configuration ajoutée dans le WS.", required = true) @PathParam("mail")
+    public String createSimpleMail(@Parameter(description  = "Objet JSON contenant les informations sur le mail a envoyer. Tous les champs sont nécessaires mais peuvent être null/vide. Les to/cc/cci sont des tableaux de String. App correspond au nom de votre application et doit correspondre à la configuration ajoutée dans le WS.", required = true) @PathParam("mail")
                                    @RequestBody @NotNull MailDto mail) throws AddressException {
         setConf(mail.getApp());
         try {
@@ -66,13 +65,13 @@ public class MailController {
         return OK_MESSAGE;
     }
 
-    @ApiOperation(value = "Envoi d'un mail classique, texte et HTML possible.")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Mail envoyé."),
-            @ApiResponse(code = 503, message = "Service indisponible."),
-            @ApiResponse(code = 400, message = "Mauvaise requête. Le paramètre problématique sera précisé par le message d'erreur. Par exemple : paramètre manquant, adresse erronnée...")})
+    @Operation(summary = "Envoi d'un mail classique, texte et HTML possible.")
+    @ApiResponse(responseCode = "200", description = "Mail envoyé.")
+    @ApiResponse(responseCode = "503", description = "Service indisponible.")
+    @ApiResponse(responseCode = "400", description = "Mauvaise requête. Le paramètre problématique sera précisé par le message d'erreur. Par exemple : paramètre manquant, adresse erronnée...")
     @PostMapping(value = "/htmlMail")
     @ResponseBody
-    public String createHtmlMail(@ApiParam(value = "Objet JSON contenant les informations sur le mail a envoyer. Tous les champs sont nécessaires mais peuvent être null/vide. Les to/cc/cci sont des tableaux de String. App correspond au nom de votre application et doit correspondre à la configuration ajoutée dans le WS.", required = true) @PathParam("mail")
+    public String createHtmlMail(@Parameter(description  = "Objet JSON contenant les informations sur le mail a envoyer. Tous les champs sont nécessaires mais peuvent être null/vide. Les to/cc/cci sont des tableaux de String. App correspond au nom de votre application et doit correspondre à la configuration ajoutée dans le WS.", required = true) @PathParam("mail")
                                  @RequestBody @NotNull MailDto mail) throws MessagingException {
         setConf(mail.getApp());
         try {
@@ -85,14 +84,14 @@ public class MailController {
         return OK_MESSAGE;
     }
 
-    @ApiOperation(value = "Envoi d'un mail classique, texte et HTML possible. Ce endpoint prend en entrée un Form Multipart, contenant dans mailJSON un objet JSON correspondant aux infos du mails (voir les autres WS), ainsi que plusieurs pièces jointes au format MultipartFile, dans un tableau")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Mail envoyé."),
-            @ApiResponse(code = 503, message = "Service indisponible."),
-            @ApiResponse(code = 400, message = "Mauvaise requête. Le paramètre problématique sera précisé par le message d'erreur. Par exemple : paramètre manquant, adresse erronnée, PJ trop volumineuse...")})
+    @Operation(summary = "Envoi d'un mail classique, texte et HTML possible. Ce endpoint prend en entrée un Form Multipart, contenant dans mailJSON un objet JSON correspondant aux infos du mails (voir les autres WS), ainsi que plusieurs pièces jointes au format MultipartFile, dans un tableau")
+    @ApiResponse(responseCode = "200", description = "Mail envoyé.")
+    @ApiResponse(responseCode = "503", description = "Service indisponible.")
+    @ApiResponse(responseCode = "400", description = "Mauvaise requête. Le paramètre problématique sera précisé par le message d'erreur. Par exemple : paramètre manquant, adresse erronnée, PJ trop volumineuse...")
     @PostMapping(value = "/htmlMailAttachment", headers = {"content-type=multipart/mixed", "content-type=multipart/form-data"})
-    public String createHtmlMailWithMultipleAttachment(@ApiParam(value = "Objet JSON contenant les informations sur le mail a envoyer. Tous les champs sont nécessaires mais peuvent être null/vide. Les to/cc/cci sont des tableaux de String. App correspond au nom de votre application et doit correspondre à la configuration ajoutée dans le WS.", required = true) @PathParam("mailJSON")
+    public String createHtmlMailWithMultipleAttachment(@Parameter(description  = "Objet JSON contenant les informations sur le mail a envoyer. Tous les champs sont nécessaires mais peuvent être null/vide. Les to/cc/cci sont des tableaux de String. App correspond au nom de votre application et doit correspondre à la configuration ajoutée dans le WS.", required = true) @PathParam("mailJSON")
                                                @RequestParam("mail") @NotNull String mailJSON,
-                                               @ApiParam(value = "Pièces jointes. C'est un MultipartFile. Il peut être vide si pas de PJ nécessaire. La taille maximale des pièces jointes est de 10Mo.", required = true) @PathParam("attachment")
+                                               @Parameter(description = "Pièces jointes. C'est un MultipartFile. Il peut être vide si pas de PJ nécessaire. La taille maximale des pièces jointes est de 10Mo.", required = true) @PathParam("attachment")
                                                @RequestParam("attachment") MultipartFile[] attachment) throws IOException, MessagingException {
 
         MailDto mail = new ObjectMapper().readValue(mailJSON, MailDto.class);
