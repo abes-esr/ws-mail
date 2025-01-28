@@ -2,7 +2,7 @@
 
 Ce WS vous permet, via un simple appel REST, d'envoyer des mails via les serveurs de l'ABES
 
-Pour pouvoir l'utiliser avec vos application, il est recommandé de mettre à jour la configuration du WS pour ajouter un compte spécifique à votre application. Voir [Mettre à jour la configuration](#mise-à-jour-de-la-configuration-pour-ajouter-une-application-appelante)
+Pour pouvoir l'utiliser avec vos applications, il est recommandé de mettre à jour la configuration du WS pour ajouter un compte spécifique à votre application. Voir [Mettre à jour la configuration](#mise-à-jour-de-la-configuration-pour-ajouter-une-application-appelante)
 Sinon, les identifiants par défaut seront utilisés.
 
 ## Exemples d'appels au WS
